@@ -8,10 +8,11 @@ import torch.nn.functional as F
 from torch.utils.tensorboard import SummaryWriter
 from torch.distributions import Normal
 from env.PriusV0 import PriusEnv
+import os
 
-PATH1 = "....../Models/SAC/WLTC_"
+PATH1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Models", "SAC", "WLTC_")
 
-PATH2 = "....../Result/SAC/WLTC_"
+PATH2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Result", "SAC", "WLTC_")
 
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -123,7 +124,7 @@ class SACContinuous:
         self.log_alpha = torch.tensor(np.log(0.01), dtype=torch.float)
         self.log_alpha.requires_grad = True 
         self.log_alpha_optimizer = torch.optim.Adam([self.log_alpha],lr = cfg['alpha_lr'])
-        self.writer = SummaryWriter("Logs_WLTC/SAC_HEV0")
+        self.writer = SummaryWriter(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logs_WLTC", "SAC_HEV0"))
 
         self.target_entropy = target_entropy
         self.gamma = cfg['gamma']

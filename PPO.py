@@ -9,10 +9,11 @@ import numpy as np
 import pandas as pd
 from torch.utils.tensorboard import SummaryWriter
 from env.PriusV0 import PriusEnv
+import os
 
-PATH1 = "....../Models/PPO/WLTC_"
+PATH1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Models", "PPO", "WLTC_")
 
-PATH2 = "....../Result/PPO/WLTC_"
+PATH2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Result", "PPO", "WLTC_")
 
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -78,7 +79,7 @@ class PPOContinuous:
         self.lmbda = cfg['lmbda']
         self.epochs = cfg['epochs']
         self.eps = cfg['eps']
-        self.writer = SummaryWriter("Logs_WLTC/PPO_HEV0")
+        self.writer = SummaryWriter(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logs_WLTC", "PPO_HEV0"))
 
     def take_action(self, state):
         state = torch.tensor(np.array([state]), dtype=torch.float).to(device)

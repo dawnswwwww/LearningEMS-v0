@@ -9,10 +9,11 @@ import numpy as np
 import pandas as pd
 from torch.utils.tensorboard import SummaryWriter
 from env.PriusV0 import PriusEnv
+import os
 
-PATH1 = "....../Models/D3QL/WLTC_"
+PATH1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Models", "D3QL", "WLTC_")
 
-PATH2 = "....../Result/D3QL/WLTC_"
+PATH2 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Result", "D3QL", "WLTC_")
 
 device = torch.device("cuda:0") if torch.cuda.is_available() else torch.device("cpu")
 
@@ -86,7 +87,7 @@ class DuelingDQN:
         self.eps_dec = cfg['eps_dec']
         self.target_update = cfg['target_update']
         self.count = 0
-        self.writer = SummaryWriter("Logs_WLTC/D3QL_HEV0")
+        self.writer = SummaryWriter(os.path.join(os.path.dirname(os.path.abspath(__file__)), "Logs_WLTC", "D3QL_HEV0"))
 
     def decrement_epsilon(self):
         if self.epsilon > self.eps_min:

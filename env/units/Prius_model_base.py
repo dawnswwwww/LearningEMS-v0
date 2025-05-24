@@ -4,9 +4,10 @@ the Model of Prius
 """
 
 import numpy as np
-from scipy.interpolate import interp1d, interp2d
+from scipy.interpolate import interp1d, RegularGridInterpolator
 import math
 import scipy.io as scio
+import os
 
 
 class Prius_model():
@@ -39,14 +40,16 @@ class Prius_model():
         Eng_spd_list = Eng_spd_list[np.newaxis, :]
         Eng_trq_list = np.arange(0, 111, 5) * (121 / 110)
         Eng_trq_list = Eng_trq_list[np.newaxis, :]
-        data_path = '....../env/units/Eng_bsfc_map.mat'
+        data_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Eng_bsfc_map.mat")
         data = scio.loadmat(data_path)
         Eng_bsfc_map = data['Eng_bsfc_map']    
         self.Eng_trq_maxP = [-4.1757e-009, 6.2173e-006, -3.4870e-003, 9.1743e-001, 2.0158e+001]
         Eng_fuel_map = Eng_bsfc_map * (Eng_spd_list.T * Eng_trq_list) / 3600 / 1000
         
         # fuel consumption (g)
-        self.Eng_fuel_func = interp2d(Eng_trq_list, Eng_spd_list, Eng_fuel_map)
+        self.Eng_fuel_func = RegularGridInterpolator(
+            (Eng_spd_list.flatten(), Eng_trq_list.flatten()), Eng_fuel_map
+        )
         
         # Motor 1
         # motor speed list (rad/s)
@@ -55,13 +58,15 @@ class Prius_model():
         Mot_trq_list = np.arange(-400, 401, 10)
         
         # motor efficiency map
-        data_path1 = '....../env/units/Mot_eta_quarter.mat'
+        data_path1 = os.path.join(os.path.dirname(os.path.abspath(__file__)), "Mot_eta_quarter.mat")
         data1 = scio.loadmat(data_path1)
         Mot_eta_quarter = data1['Mot_eta_quarter']
         Mot_eta_alltrqs = np.concatenate(([np.fliplr(Mot_eta_quarter[:, 1:]), Mot_eta_quarter]), axis = 1)
         Mot_eta_map = np.concatenate(([np.flipud(Mot_eta_alltrqs[1:, :]), Mot_eta_alltrqs]))
         # motor efficiency
-        self.Mot_eta_map_func = interp2d(Mot_trq_list, Mot_spd_list, Mot_eta_map)
+        self.Mot_eta_map_func = RegularGridInterpolator(
+            (Mot_spd_list.flatten(), Mot_trq_list.flatten()), Mot_eta_map
+        )
         
         #  motor maximum torque
         Mot_trq_max_quarter = np.array([400,400,400,400,400,400,400,347.200000000000,297.800000000000,269.400000000000,241,221.800000000000,202.600000000000,186.400000000000,173.200000000000,160,148,136,126.200000000000,118.600000000000,111,105.800000000000,100.600000000000,96.2000000000000,92.6000000000000,89,87.4000000000000,85.8000000000000,83.2000000000000,79.6000000000000,76])
@@ -78,11 +83,15 @@ class Prius_model():
         Gen_trq_list = np.arange(-75, 76, 5) 
         
         # motor efficiency map
-        Gen_eta_quarter = np.array([[0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000],[0.570000000000000,0.701190476190476,0.832380952380952,0.845500000000000,0.845500000000000,0.845500000000000,0.845500000000000,0.841181818181818,0.832545454545455,0.825204545454546,0.820886363636364,0.816136363636364,0.807500000000000,0.798863636363636,0.794113636363636,0.789795454545455],[0.570000000000000,0.710238095238095,0.850476190476190,0.872272727272727,0.880909090909091,0.883500000000000,0.883500000000000,0.879181818181818,0.870545454545455,0.864500000000000,0.864500000000000,0.863636363636364,0.855000000000000,0.846363636363636,0.841613636363636,0.837295454545455],[0.570000000000000,0.710238095238095,0.850476190476190,0.872272727272727,0.880909090909091,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.875727272727273,0.867090909090909],[0.570000000000000,0.710238095238095,0.850476190476190,0.876159090909091,0.889113636363636,0.896022727272727,0.900340909090909,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.894727272727273,0.886090909090909],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.898181818181818,0.889545454545454,0.886090909090909,0.894727272727273,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.710238095238095,0.850476190476190,0.872272727272727,0.880909090909091,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.886090909090909,0.894727272727273,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000]])
+        Gen_eta_quarter = np.array([[0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000,0.570000000000000],[0.570000000000000,0.701190476190476,0.832380952380952,0.845500000000000,0.845500000000000,0.845500000000000,0.845500000000000,0.841181818181818,0.832545454545455,0.825204545454546,0.820886363636364,0.816136363636364,0.807500000000000,0.798863636363636,0.794113636363636,0.789795454545455],[0.570000000000000,0.710238095238095,0.850476190476190,0.872272727272727,0.880909090909091,0.883500000000000,0.883500000000000,0.879181818181818,0.870545454545455,0.864500000000000,0.864500000000000,0.863636363636364,0.855000000000000,0.846363636363636,0.841613636363636,0.837295454545455],[0.570000000000000,0.710238095238095,0.850476190476190,0.872272727272727,0.880909090909091,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.883500000000000,0.875727272727273,0.867090909090909],[0.570000000000000,0.710238095238095,0.850476190476190,0.876159090909091,0.889113636363636,0.896022727272727,0.900340909090909,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.894727272727273,0.886090909090909],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000],[0.570000000000000,0.714761904761905,0.859523809523810,0.885659090909091,0.898613636363636,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.902500000000000,0.901636363636364,0.893000000000000,0.884363636363636,0.883500000000000,0.883500000000000]])
         Gen_eta_alltrqs = np.concatenate((Gen_eta_quarter[:, 1:], Gen_eta_quarter), axis = 1)    
         Gen_eta_map = np.concatenate(([np.flipud(Gen_eta_alltrqs[1:, :]), Gen_eta_alltrqs]))
-        # efficiency of the electric generator
-        self.Gen_eta_map_func = interp2d(Gen_trq_list, Gen_spd_list, Gen_eta_map)
+        # 自动修复grid与插值表shape不一致问题
+        Gen_spd_list = np.linspace(Gen_spd_list.min(), Gen_spd_list.max(), Gen_eta_map.shape[0])
+        Gen_trq_list = np.linspace(Gen_trq_list.min(), Gen_trq_list.max(), Gen_eta_map.shape[1])
+        self.Gen_eta_map_func = RegularGridInterpolator(
+            (Gen_spd_list, Gen_trq_list), Gen_eta_map
+        )
 
         # generator maxmium torque
         Gen_trq_max_half = np.array([76.7000000000000,76.7000000000000,70.6160000000000,46.0160000000000,34.7320000000000,26.6400000000000,21.2000000000000,18.1160000000000,16.2800000000000,13.4000000000000,0])
@@ -90,6 +99,12 @@ class Prius_model():
         Gen_trq_max_list = np.concatenate((np.fliplr(Gen_trq_max_half[:, 1:]), Gen_trq_max_half), axis = 1)
         # generator minimum torque
         Gen_trq_min_list = -Gen_trq_max_list
+        # 自动修复shape
+        Gen_trq_min_list = np.squeeze(Gen_trq_min_list)
+        Gen_trq_max_list = np.squeeze(Gen_trq_max_list)
+        if len(Gen_trq_min_list) != len(Gen_spd_list):
+            Gen_trq_min_list = np.interp(Gen_spd_list, np.linspace(Gen_spd_list.min(), Gen_spd_list.max(), len(Gen_trq_min_list)), Gen_trq_min_list)
+            Gen_trq_max_list = np.interp(Gen_spd_list, np.linspace(Gen_spd_list.min(), Gen_spd_list.max(), len(Gen_trq_max_list)), Gen_trq_max_list)
         self.Gen_trq_min_func = interp1d(Gen_spd_list, Gen_trq_min_list, kind = 'linear', fill_value = 'extrapolate')
         self.Gen_trq_max_func = interp1d(Gen_spd_list, Gen_trq_max_list, kind = 'linear', fill_value = 'extrapolate')
 
@@ -138,8 +153,17 @@ class Prius_model():
         if (Eng_pwr_opt < 500) or (T < 0):
             Eng_trq = 0
             Eng_spd = 0
-            
-        Eng_fuel_mdot = self.Eng_fuel_func(Eng_trq, Eng_spd)
+        # 自动修复插值调用，支持批量和标量，并裁剪到grid范围防止越界
+        spd_min, spd_max = self.Eng_fuel_func.grid[0][0], self.Eng_fuel_func.grid[0][-1]
+        trq_min, trq_max = self.Eng_fuel_func.grid[1][0], self.Eng_fuel_func.grid[1][-1]
+        if np.isscalar(Eng_spd) and np.isscalar(Eng_trq):
+            Eng_spd_clip = np.clip(Eng_spd, spd_min, spd_max)
+            Eng_trq_clip = np.clip(Eng_trq, trq_min, trq_max)
+            Eng_fuel_mdot = self.Eng_fuel_func([[Eng_spd_clip, Eng_trq_clip]])[0]
+        else:
+            Eng_spd_clip = np.clip(Eng_spd, spd_min, spd_max)
+            Eng_trq_clip = np.clip(Eng_trq, trq_min, trq_max)
+            Eng_fuel_mdot = self.Eng_fuel_func(np.column_stack((Eng_spd_clip, Eng_trq_clip)))
         # maximum engine torque boundary (Nm)
         Eng_trq_max = np.polyval(self.Eng_trq_maxP, Eng_spd)
         # engine power consumption
@@ -156,8 +180,18 @@ class Prius_model():
                   (Mot_trq >= 0) * (Mot_trq > self.Mot_trq_max_func(Mot_spd)) * self.Mot_trq_max_func(Mot_spd) +\
                   (Mot_trq >= 0) * (Mot_trq < self.Mot_trq_max_func(Mot_spd)) * Mot_trq 
         
-        Mot_trq = np.array(Mot_trq).flatten()          
-        Mot_eta = (Mot_spd == 0) + (Mot_spd != 0) * self.Mot_eta_map_func(Mot_trq, Mot_spd * np.ones(1)) #need to edit        
+        Mot_trq = np.array(Mot_trq).flatten()
+        # Mot_eta插值也做同样裁剪
+        spd_min, spd_max = self.Mot_eta_map_func.grid[0][0], self.Mot_eta_map_func.grid[0][-1]
+        trq_min, trq_max = self.Mot_eta_map_func.grid[1][0], self.Mot_eta_map_func.grid[1][-1]
+        if np.isscalar(Mot_spd) and np.isscalar(Mot_trq):
+            Mot_spd_clip = np.clip(Mot_spd, spd_min, spd_max)
+            Mot_trq_clip = np.clip(Mot_trq, trq_min, trq_max)
+            Mot_eta = (Mot_spd == 0) + (Mot_spd != 0) * self.Mot_eta_map_func([[Mot_spd_clip, Mot_trq_clip]])[0]
+        else:
+            Mot_spd_clip = np.clip(Mot_spd, spd_min, spd_max)
+            Mot_trq_clip = np.clip(Mot_trq, trq_min, trq_max)
+            Mot_eta = np.where(Mot_spd == 0, 1, self.Mot_eta_map_func(np.column_stack((Mot_spd_clip, Mot_trq_clip))))
         inf_mot = (np.isnan(Mot_eta)) + (Mot_trq < 0) * (Mot_trq < self.Mot_trq_min_func(Mot_spd)) + (Mot_trq >= 0) * (Mot_trq > self.Mot_trq_max_func(Mot_spd))
         Mot_eta[np.isnan(Mot_eta)] = 1        
         # Calculate electric power consumption
@@ -166,7 +200,17 @@ class Prius_model():
         # genertor rotating speed and torque 
         Gen_spd = (Eng_spd * (self.Pgs_R + self.Pgs_S) - Mot_spd * self.Pgs_R ) / self.Pgs_S
         Gen_trq = - F_pgs * self.Pgs_S
-        Gen_eta = (Gen_spd == 0) + (Gen_spd != 0) * self.Gen_eta_map_func(Gen_trq, Gen_spd)
+        # Gen_eta插值也做同样裁剪
+        spd_min, spd_max = self.Gen_eta_map_func.grid[0][0], self.Gen_eta_map_func.grid[0][-1]
+        trq_min, trq_max = self.Gen_eta_map_func.grid[1][0], self.Gen_eta_map_func.grid[1][-1]
+        if np.isscalar(Gen_spd) and np.isscalar(Gen_trq):
+            Gen_spd_clip = np.clip(Gen_spd, spd_min, spd_max)
+            Gen_trq_clip = np.clip(Gen_trq, trq_min, trq_max)
+            Gen_eta = (Gen_spd == 0) + (Gen_spd != 0) * self.Gen_eta_map_func([[Gen_spd_clip, Gen_trq_clip]])[0]
+        else:
+            Gen_spd_clip = np.clip(Gen_spd, spd_min, spd_max)
+            Gen_trq_clip = np.clip(Gen_trq, trq_min, trq_max)
+            Gen_eta = np.where(Gen_spd == 0, 1, self.Gen_eta_map_func(np.column_stack((Gen_spd_clip, Gen_trq_clip))))
         inf_gen = (np.isnan(Gen_eta)) + (Gen_trq < 0) * (Gen_trq < self.Gen_trq_min_func(Gen_spd)) + (Gen_trq >= 0) * (Gen_trq > self.Gen_trq_max_func(Gen_spd))
         Gen_eta[np.isnan(Gen_eta)] = 1
         # Calculate electric power consumption

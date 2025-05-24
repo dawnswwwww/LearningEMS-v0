@@ -5,11 +5,11 @@ from gym import spaces
 import os
 import sys
 
-sys.path.append('....../env/units')
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "units"))
 from env.units.Prius_model_base import Prius_model
 
 # 单个工况测试
-path = "....../test_data"
+path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "test_data")
 
 class PriusEnv():
     # metadata = {'render.modes': ['human']}
@@ -54,7 +54,7 @@ class PriusEnv():
 
         # path = "E:/Document/Experients/HEV_EMS/training_data"
         
-        data = scio.loadmat(path + '/' + self.base_data)
+        data = scio.loadmat(os.path.join(path, self.base_data))
         car_spd_one = data['speed_vector']            
         SOC_origin = 0.6
         total_milage = np.sum(car_spd_one) / 1000 
@@ -181,7 +181,7 @@ class PriusEnv_():
 
         # path = "E:/Document/Experients/HEV_EMS/training_data"
         
-        data = scio.loadmat(path + '/' + self.base_data)
+        data = scio.loadmat(os.path.join(path, self.base_data))
         car_spd_one = data['speed_vector']            
         SOC_origin = 0.6
         total_milage = np.sum(car_spd_one) / 1000 
